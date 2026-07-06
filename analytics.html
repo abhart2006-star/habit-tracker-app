@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrowDaily — Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0e17;--surface:#1a1828;--surface2:#221f35;
+  --accent:#e8c547;--accent2:#ff6b6b;--accent3:#4ecdc4;--accent4:#a78bfa;
+  --text:#fffffe;--text-muted:#8b8a9b;--border:rgba(255,255,255,0.08);
+  --shadow:0 8px 32px rgba(0,0,0,0.4);--radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;top:-40%;left:-40%;width:180%;height:180%;
+  background:radial-gradient(ellipse at 15% 25%,rgba(167,139,250,.09) 0%,transparent 50%),
+             radial-gradient(ellipse at 85% 75%,rgba(232,197,71,.07) 0%,transparent 50%),
+             radial-gradient(ellipse at 50% 50%,rgba(78,205,196,.05) 0%,transparent 55%);
+  pointer-events:none;z-index:0;}
+
+.page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 20px 80px;}
+
+/* HEADER */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent4));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(232,197,71,.3);}
+.logo h1{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;line-height:1;}
+.logo p{font-size:.7rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
+.back-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);cursor:pointer;font-size:.8rem;padding:8px 15px;transition:all .2s;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.back-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SECTION TITLE */
+.section-title{font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:4px;}
+.section-sub{font-size:.78rem;color:var(--text-muted);margin-bottom:18px;}
+
+/* CONTROLS BAR */
+.controls-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+.ctrl-group{display:flex;flex-direction:column;gap:5px;}
+.ctrl-label{font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
+.ctrl-select,.ctrl-btn-group{display:flex;gap:6px;flex-wrap:wrap;}
+.ctrl-select select{background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;padding:7px 12px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;transition:border-color .2s;}
+.ctrl-select select:focus{border-color:var(--accent4);}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.74rem;padding:5px 13px;transition:all .2s;white-space:nowrap;}
+.chip.active,.chip:hover{background:rgba(232,197,71,.12);border-color:var(--accent);color:var(--accent);}
+.chip.graph-chip.active{background:rgba(167,139,250,.12);border-color:var(--accent4);color:var(--accent4);}
+
+/* SUMMARY CARDS */
+.summary-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:24px;}
+@media(min-width:540px){.summary-row{grid-template-columns:repeat(4,1fr);}}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;}
+.sum-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.sum-card.c1::before{background:linear-gradient(90deg,var(--accent),#ffd700);}
+.sum-card.c2::before{background:linear-gradient(90deg,var(--accent3),#80ffdb);}
+.sum-card.c3::before{background:linear-gradient(90deg,var(--accent4),#c084fc);}
+.sum-card.c4::before{background:linear-gradient(90deg,var(--accent2),#ff9f43);}
+.sum-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;line-height:1;margin-bottom:4px;}
+.sum-card.c1 .sum-num{color:var(--accent);}
+.sum-card.c2 .sum-num{color:var(--accent3);}
+.sum-card.c3 .sum-num{color:var(--accent4);}
+.sum-card.c4 .sum-num{color:var(--accent2);}
+.sum-label{font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
+.sum-trend{font-size:.72rem;margin-top:4px;}
+.trend-up{color:var(--accent3);}
+.trend-dn{color:var(--accent2);}
+
+/* CHART CARDS */
+.chart-grid{display:grid;gap:18px;margin-bottom:24px;}
+.chart-grid.cols2{grid-template-columns:1fr 1fr;}
+.chart-grid.cols1{grid-template-columns:1fr;}
+@media(max-width:640px){.chart-grid.cols2{grid-template-columns:1fr;}}
+
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;}
+.chart-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap;}
+.chart-card-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;}
+.chart-card-sub{font-size:.72rem;color:var(--text-muted);margin-top:2px;}
+.chart-type-toggle{display:flex;gap:5px;flex-wrap:wrap;}
+.tt-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:.7rem;padding:4px 9px;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.tt-btn.active,.tt-btn:hover{border-color:var(--accent4);color:var(--accent4);background:rgba(167,139,250,.1);}
+.chart-wrap{position:relative;width:100%;}
+.chart-wrap canvas{max-height:300px;}
+.chart-wrap.tall canvas{max-height:380px;}
+.chart-wrap.short canvas{max-height:200px;}
+
+/* HEATMAP */
+.heatmap-wrap{overflow-x:auto;padding-bottom:4px;}
+.heatmap{display:flex;gap:3px;}
+.hm-week{display:flex;flex-direction:column;gap:3px;}
+.hm-day{width:14px;height:14px;border-radius:3px;background:var(--surface2);border:1px solid rgba(255,255,255,0.04);transition:all .2s;cursor:default;position:relative;}
+.hm-day:hover::after{content:attr(title);position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;font-size:.65rem;padding:3px 7px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none;}
+.hm-day.l1{background:rgba(78,205,196,.2);}
+.hm-day.l2{background:rgba(78,205,196,.45);}
+.hm-day.l3{background:rgba(78,205,196,.7);}
+.hm-day.l4{background:var(--accent3);box-shadow:0 0 6px rgba(78,205,196,.4);}
+.hm-day.skp{background:rgba(255,107,107,.3);}
+.hm-months{display:flex;gap:0;margin-bottom:4px;padding-left:0;}
+.hm-month-label{font-size:.62rem;color:var(--text-muted);flex:1;text-align:left;}
+.hm-legend{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.68rem;color:var(--text-muted);}
+.hm-swatch{width:11px;height:11px;border-radius:2px;}
+
+/* CATEGORY TABLE */
+.cat-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.cat-table th{color:var(--text-muted);font-weight:500;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;}
+.cat-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.04);}
+.cat-table tr:last-child td{border-bottom:none;}
+.cat-table tr:hover td{background:rgba(255,255,255,.02);}
+.mini-bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;width:80px;display:inline-block;vertical-align:middle;}
+.mini-bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+.pct-badge{display:inline-block;font-weight:600;font-size:.8rem;}
+
+/* NO DATA */
+.no-data{text-align:center;padding:40px 20px;color:var(--text-muted);}
+.no-data .big{font-size:2.4rem;margin-bottom:12px;}
+.no-data h3{font-family:'Playfair Display',serif;color:var(--text);margin-bottom:6px;}
+.no-data p{font-size:.84rem;line-height:1.6;}
+
+/* TOOLTIP OVERRIDE */
+.chartjs-tooltip{pointer-events:none !important;}
+
+/* RESPONSIVE */
+@media(max-width:480px){
+  .controls-bar{flex-direction:column;align-items:flex-start;}
+  .chart-wrap canvas{max-height:240px;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div><h1>Analytics</h1><p>GrowDaily Progress</p></div>
+    </div>
+    <a class="back-btn" href="habit-tracker.html">← Back to Tracker</a>
+  </div>
+
+  <!-- NO DATA STATE -->
+  <div id="noDataState" style="display:none;">
+    <div class="no-data">
+      <div class="big">📊</div>
+      <h3>No Data Yet</h3>
+      <p>Head to the <a href="habit-tracker.html" style="color:var(--accent);">Habit Tracker</a>, add some habits and check them off for a few days — then come back here to see your progress charts!</p>
+    </div>
+  </div>
+
+  <div id="analyticsContent">
+
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+      <div class="ctrl-group">
+        <div class="ctrl-label">Time Range</div>
+        <div class="ctrl-btn-group" id="rangeChips">
+          <button class="chip active" data-range="7">Last 7 Days</button>
+          <button class="chip" data-range="30">Last 30 Days</button>
+          <button class="chip" data-range="90">Last 3 Months</button>
+          <button class="chip" data-range="365">Last Year</button>
+          <button class="chip" data-range="all">All Time</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Category Filter</div>
+        <div class="ctrl-select"><select id="catFilter"><option value="all">All Categories</option></select></div>
+      </div>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-row">
+      <div class="sum-card c1">
+        <div class="sum-num" id="sumAvg">—</div>
+        <div class="sum-label">Avg Daily %</div>
+        <div class="sum-trend" id="sumTrend"></div>
+      </div>
+      <div class="sum-card c2">
+        <div class="sum-num" id="sumBestDay">—</div>
+        <div class="sum-label">Best Day</div>
+        <div class="sum-trend" id="sumBestDate" style="color:var(--text-muted);font-size:.7rem;"></div>
+      </div>
+      <div class="sum-card c3">
+        <div class="sum-num" id="sumTotalDone">—</div>
+        <div class="sum-label">Total Completions</div>
+      </div>
+      <div class="sum-card c4">
+        <div class="sum-num" id="sumTotalSkipped">—</div>
+        <div class="sum-label">Total Skips</div>
+      </div>
+    </div>
+
+    <!-- ROW 1: Daily Progress + Donut -->
+    <div class="chart-grid cols2" style="margin-bottom:18px;">
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Daily Completion %</div>
+            <div class="chart-card-sub">How many habits you completed each day</div>
+          </div>
+          <div class="chart-type-toggle">
+            <button class="tt-btn active" onclick="switchChart('dailyChart','bar',this)">Bar</button>
+            <button class="tt-btn" onclick="switchChart('dailyChart','line',this)">Line</button>
+            <button class="tt-btn" onclick="switchChart('dailyChart','area',this)">Area</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Overall Outcome Split</div>
+            <div class="chart-card-sub">Done vs Skipped vs Missed</div>
+          </div>
+          <div class="chart-type-toggle">
+            <button class="tt-btn active" onclick="switchChart('splitChart','doughnut',this)">Donut</button>
+            <button class="tt-btn" onclick="switchChart('splitChart','pie',this)">Pie</button>
+            <button class="tt-btn" onclick="switchChart('splitChart','polarArea',this)">Polar</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="splitChart"></canvas></div>
+      </div>
+
+    </div>
+
+    <!-- ROW 2: Category Bar + Radar -->
+    <div class="chart-grid cols2" style="margin-bottom:18px;">
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Progress by Category</div>
+            <div class="chart-card-sub">Average completion % per category</div>
+          </div>
+          <div class="chart-type-toggle">
+            <button class="tt-btn active" onclick="switchChart('catChart','bar',this)">Bar</button>
+            <button class="tt-btn" onclick="switchChart('catChart','horizontalBar',this)">H-Bar</button>
+            <button class="tt-btn" onclick="switchChart('catChart','radar',this)">Radar</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="catChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Monthly Overview</div>
+            <div class="chart-card-sub">Average completion % by month</div>
+          </div>
+          <div class="chart-type-toggle">
+            <button class="tt-btn active" onclick="switchChart('monthChart','bar',this)">Bar</button>
+            <button class="tt-btn" onclick="switchChart('monthChart','line',this)">Line</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
+      </div>
+
+    </div>
+
+    <!-- ROW 3: Weekly Pattern -->
+    <div class="chart-grid cols2" style="margin-bottom:18px;">
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Best Day of the Week</div>
+            <div class="chart-card-sub">Which days you're most consistent</div>
+          </div>
+          <div class="chart-type-toggle">
+            <button class="tt-btn active" onclick="switchChart('weekdayChart','bar',this)">Bar</button>
+            <button class="tt-btn" onclick="switchChart('weekdayChart','radar',this)">Radar</button>
+            <button class="tt-btn" onclick="switchChart('weekdayChart','polarArea',this)">Polar</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="weekdayChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Streak Timeline</div>
+            <div class="chart-card-sub">Current streak per habit</div>
+          </div>
+          <div class="chart-type-toggle">
+            <button class="tt-btn active" onclick="switchChart('streakChart','bar',this)">Bar</button>
+            <button class="tt-btn" onclick="switchChart('streakChart','horizontalBar',this)">H-Bar</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="streakChart"></canvas></div>
+      </div>
+
+    </div>
+
+    <!-- ROW 4: Full Width Heatmap -->
+    <div class="chart-card" style="margin-bottom:18px;">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">🗓️ Activity Heatmap</div>
+          <div class="chart-card-sub">GitHub-style — each square = one day. Green = done, Red = skipped.</div>
+        </div>
+      </div>
+      <div class="heatmap-wrap">
+        <div class="hm-months" id="hmMonthLabels"></div>
+        <div class="heatmap" id="heatmapGrid"></div>
+        <div class="hm-legend">
+          <span>Less</span>
+          <div class="hm-swatch" style="background:var(--surface2);border:1px solid var(--border);"></div>
+          <div class="hm-swatch hm-day l1" style="width:11px;height:11px;"></div>
+          <div class="hm-swatch hm-day l2" style="width:11px;height:11px;"></div>
+          <div class="hm-swatch hm-day l3" style="width:11px;height:11px;"></div>
+          <div class="hm-swatch hm-day l4" style="width:11px;height:11px;"></div>
+          <span>More</span>
+          &nbsp;&nbsp;
+          <div class="hm-swatch" style="background:rgba(255,107,107,.3);border-radius:2px;"></div>
+          <span>Skipped</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 5: Category Table -->
+    <div class="chart-card" style="margin-bottom:18px;">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">📋 Category Performance Table</div>
+          <div class="chart-card-sub">Detailed breakdown by every category</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="cat-table" id="catTable">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Habits</th>
+              <th>Completions</th>
+              <th>Skips</th>
+              <th>Avg %</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody id="catTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ROW 6: Individual Habits -->
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">🏆 Individual Habit Performance</div>
+          <div class="chart-card-sub">Completion rate for each habit in selected range</div>
+        </div>
+        <div class="chart-type-toggle">
+          <button class="tt-btn active" onclick="switchChart('habitChart','bar',this)">Bar</button>
+          <button class="tt-btn" onclick="switchChart('habitChart','horizontalBar',this)">H-Bar</button>
+          <button class="tt-btn" onclick="switchChart('habitChart','radar',this)">Radar</button>
+        </div>
+      </div>
+      <div class="chart-wrap tall"><canvas id="habitChart"></canvas></div>
+    </div>
+
+  </div><!-- end analyticsContent -->
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  LOAD DATA
+// ═══════════════════════════════════════════
+const habits = JSON.parse(localStorage.getItem('gd_habits') || '[]');
+const cats   = JSON.parse(localStorage.getItem('gd_cats')   || '[]');
+
+const CAT_COLORS = [
+  '#e8c547','#4ecdc4','#a78bfa','#ff6b6b','#80ffdb','#ffd166',
+  '#ff9f43','#c084fc','#06d6a0','#ef476f','#118ab2','#ffd6a5',
+];
+
+function getCatColor(idx){ return CAT_COLORS[idx % CAT_COLORS.length]; }
+function getCat(id){ return cats.find(c=>c.id===id)||{emoji:'⭐',name:id||'General'}; }
+
+// Date helpers
+function dateKey(d){ return d.toISOString().split('T')[0]; }
+function addDays(d, n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function parseDateKey(s){ const [y,m,d]=s.split('-'); return new Date(y,m-1,d); }
+
+function getDaysInRange(rangeDays){
+  const today = new Date();
+  const end = dateKey(today);
+  let start;
+  if(rangeDays==='all'){
+    // find earliest createdAt
+    const all = habits.flatMap(h=>[...h.completedDates,...(h.skippedDates||[]).map(s=>s.date)]);
+    if(!all.length) { const d=new Date(today); d.setDate(d.getDate()-30); start=dateKey(d); }
+    else start = all.sort()[0];
+  } else {
+    const d = new Date(today); d.setDate(d.getDate()-(Number(rangeDays)-1)); start=dateKey(d);
+  }
+  const days=[]; let cur=parseDateKey(start);
+  while(dateKey(cur)<=end){ days.push(dateKey(cur)); cur=addDays(cur,1); }
+  return days;
+}
+
+// filter habits by category
+let currentRange='7', currentCat='all';
+let charts={};
+
+// ═══════════════════════════════════════════
+//  CHART.JS GLOBAL DEFAULTS
+// ═══════════════════════════════════════════
+Chart.defaults.color='#8b8a9b';
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.plugins.legend.labels.boxWidth=12;
+Chart.defaults.plugins.legend.labels.padding=14;
+Chart.defaults.plugins.tooltip.backgroundColor='rgba(26,24,40,0.95)';
+Chart.defaults.plugins.tooltip.borderColor='rgba(255,255,255,0.08)';
+Chart.defaults.plugins.tooltip.borderWidth=1;
+Chart.defaults.plugins.tooltip.padding=10;
+Chart.defaults.plugins.tooltip.titleColor='#fffffe';
+Chart.defaults.plugins.tooltip.bodyColor='#8b8a9b';
+
+const GRID_COLOR='rgba(255,255,255,0.06)';
+const TICK_COLOR='#8b8a9b';
+
+function axisDefaults(xTitle='',yTitle=''){
+  return {
+    x:{ grid:{color:GRID_COLOR}, ticks:{color:TICK_COLOR}, title:xTitle?{display:true,text:xTitle,color:TICK_COLOR}:{display:false} },
+    y:{ grid:{color:GRID_COLOR}, ticks:{color:TICK_COLOR}, title:yTitle?{display:true,text:yTitle,color:TICK_COLOR}:{display:false},
+        min:0, max:100, stepSize:25 }
+  };
+}
+
+// ═══════════════════════════════════════════
+//  COMPUTE
+// ═══════════════════════════════════════════
+function getFilteredHabits(){
+  if(currentCat==='all') return habits;
+  return habits.filter(h=>h.category===currentCat);
+}
+
+function computeDailyData(days, filteredHabits){
+  return days.map(day=>{
+    const total   = filteredHabits.length;
+    const done    = filteredHabits.filter(h=>h.completedDates.includes(day)).length;
+    const skipped = filteredHabits.filter(h=>(h.skippedDates||[]).some(s=>s.date===day)).length;
+    const pct     = total>0 ? Math.round(done/total*100) : 0;
+    return {day, done, skipped, total, pct};
+  });
+}
+
+function computeOverallSplit(days, filteredHabits){
+  let done=0, skipped=0, missed=0;
+  days.forEach(day=>{
+    filteredHabits.forEach(h=>{
+      if(h.completedDates.includes(day)) done++;
+      else if((h.skippedDates||[]).some(s=>s.date===day)) skipped++;
+      else missed++;
+    });
+  });
+  return {done,skipped,missed};
+}
+
+function computeCatData(days){
+  return cats.map((cat,idx)=>{
+    const ch = habits.filter(h=>h.category===cat.id);
+    if(!ch.length) return null;
+    let totalSlots=0, done=0, skipped=0;
+    days.forEach(day=>{
+      ch.forEach(h=>{
+        totalSlots++;
+        if(h.completedDates.includes(day)) done++;
+        else if((h.skippedDates||[]).some(s=>s.date===day)) skipped++;
+      });
+    });
+    const pct = totalSlots>0 ? Math.round(done/totalSlots*100) : 0;
+    return {cat, idx, done, skipped, total:totalSlots, pct, habitCount:ch.length};
+  }).filter(Boolean);
+}
+
+function computeMonthData(days, filteredHabits){
+  const map={};
+  days.forEach(day=>{
+    const d=parseDateKey(day);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+    if(!map[key]) map[key]={label,done:0,total:0};
+    filteredHabits.forEach(h=>{
+      map[key].total++;
+      if(h.completedDates.includes(day)) map[key].done++;
+    });
+  });
+  return Object.values(map).map(m=>({label:m.label, pct:m.total>0?Math.round(m.done/m.total*100):0}));
+}
+
+function computeWeekdayData(days, filteredHabits){
+  const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const slots=new Array(7).fill(0), done=new Array(7).fill(0);
+  days.forEach(day=>{
+    const dow=parseDateKey(day).getDay();
+    filteredHabits.forEach(h=>{
+      slots[dow]++;
+      if(h.completedDates.includes(day)) done[dow]++;
+    });
+  });
+  return names.map((n,i)=>({label:n, pct:slots[i]>0?Math.round(done[i]/slots[i]*100):0}));
+}
+
+function computeStreaks(filteredHabits){
+  return filteredHabits.map(h=>{
+    let s=0; const now=new Date();
+    for(let i=0;i<365;i++){
+      const d=new Date(now); d.setDate(now.getDate()-i);
+      const k=dateKey(d);
+      const done=h.completedDates.includes(k);
+      const skip=(h.skippedDates||[]).some(x=>x.date===k);
+      if(done){s++;}
+      else if(i===0){}
+      else if(skip){continue;}
+      else{break;}
+    }
+    return {name:h.emoji+' '+h.name, streak:s};
+  }).sort((a,b)=>b.streak-a.streak).slice(0,15);
+}
+
+function computeHabitPerf(days, filteredHabits){
+  return filteredHabits.map(h=>{
+    let done=0;
+    days.forEach(day=>{ if(h.completedDates.includes(day)) done++; });
+    const pct = days.length>0 ? Math.round(done/days.length*100) : 0;
+    return {name:h.emoji+' '+h.name, pct};
+  }).sort((a,b)=>b.pct-a.pct).slice(0,20);
+}
+
+// ═══════════════════════════════════════════
+//  CHART FACTORY
+// ═══════════════════════════════════════════
+function makeChart(id, type, data, options={}){
+  if(charts[id]){ charts[id].destroy(); }
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, { type, data, options });
+}
+
+function switchChart(id, newType, btn){
+  btn.closest('.chart-type-toggle').querySelectorAll('.tt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  refreshChart(id, newType);
+}
+
+let chartTypes = {
+  dailyChart:'bar', splitChart:'doughnut', catChart:'bar',
+  monthChart:'bar', weekdayChart:'bar', streakChart:'bar', habitChart:'bar'
+};
+
+function refreshChart(id, type){
+  if(type) chartTypes[id]=type;
+  renderAllCharts();
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+function renderAllCharts(){
+  const days = getDaysInRange(currentRange);
+  const fh   = getFilteredHabits();
+
+  if(!habits.length){
+    document.getElementById('noDataState').style.display='block';
+    document.getElementById('analyticsContent').style.display='none';
+    return;
+  }
+
+  // Summary cards
+  const daily = computeDailyData(days, fh);
+  const avgPct = daily.length ? Math.round(daily.reduce((s,d)=>s+d.pct,0)/daily.length) : 0;
+  const best   = daily.reduce((b,d)=>d.pct>b.pct?d:b, {pct:0,day:''});
+  const totDone    = daily.reduce((s,d)=>s+d.done,0);
+  const totSkipped = daily.reduce((s,d)=>s+d.skipped,0);
+
+  document.getElementById('sumAvg').textContent     = avgPct+'%';
+  document.getElementById('sumBestDay').textContent = best.pct+'%';
+  document.getElementById('sumBestDate').textContent= best.day ? parseDateKey(best.day).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+  document.getElementById('sumTotalDone').textContent    = totDone;
+  document.getElementById('sumTotalSkipped').textContent = totSkipped;
+
+  // trend vs prev period
+  const half=Math.floor(daily.length/2);
+  const prevAvg=half?Math.round(daily.slice(0,half).reduce((s,d)=>s+d.pct,0)/half):avgPct;
+  const currAvg=half?Math.round(daily.slice(half).reduce((s,d)=>s+d.pct,0)/(daily.length-half)):avgPct;
+  const diff=currAvg-prevAvg;
+  const trendEl=document.getElementById('sumTrend');
+  trendEl.textContent=diff===0?'Steady':(diff>0?`▲ ${diff}% vs prev`:`▼ ${Math.abs(diff)}% vs prev`);
+  trendEl.className='sum-trend '+(diff>0?'trend-up':diff<0?'trend-dn':'');
+
+  // Labels: format dates nicely
+  const dayLabels = daily.map(d=>{
+    const dt=parseDateKey(d.day);
+    if(days.length<=14) return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    if(days.length<=60) return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  });
+
+  // ── 1. Daily Chart ──
+  const dailyPcts = daily.map(d=>d.pct);
+  const dType = chartTypes.dailyChart;
+  const isArea = dType==='area';
+  const actualDType = isArea?'line':dType;
+
+  const dailyGrad = (ctx)=>{
+    const g=ctx.chart.ctx.createLinearGradient(0,0,0,280);
+    g.addColorStop(0,'rgba(78,205,196,0.35)');
+    g.addColorStop(1,'rgba(78,205,196,0.02)');
+    return g;
+  };
+
+  makeChart('dailyChart', actualDType, {
+    labels: dayLabels,
+    datasets:[{
+      label:'Completion %',
+      data: dailyPcts,
+      backgroundColor: actualDType==='line'? (isArea ? (ctx=>dailyGrad(ctx)) : 'transparent') : dailyPcts.map(p=>p>=80?'rgba(78,205,196,0.8)':p>=50?'rgba(232,197,71,0.75)':'rgba(255,107,107,0.7)'),
+      borderColor:'#4ecdc4',
+      borderWidth: actualDType==='line'?2:0,
+      fill: isArea,
+      tension:0.4,
+      pointBackgroundColor:'#4ecdc4',
+      pointRadius: actualDType==='line'?3:0,
+      borderRadius: actualDType==='bar'?5:0,
+    }]
+  },{
+    responsive:true, maintainAspectRatio:true,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}% completed`}}},
+    scales: axisDefaults('','Completion %'),
+  });
+
+  // ── 2. Split Donut/Pie ──
+  const split = computeOverallSplit(days, fh);
+  const sType = chartTypes.splitChart;
+  makeChart('splitChart', sType, {
+    labels:['Completed','Skipped','Missed'],
+    datasets:[{
+      data:[split.done, split.skipped, split.missed],
+      backgroundColor:['rgba(78,205,196,0.82)','rgba(255,107,107,0.78)','rgba(139,138,155,0.5)'],
+      borderColor:['#4ecdc4','#ff6b6b','#8b8a9b'],
+      borderWidth:2,
+      hoverOffset:8,
+    }]
+  },{
+    responsive:true, maintainAspectRatio:true,
+    plugins:{
+      legend:{position:'bottom'},
+      tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${Math.round(c.raw/(split.done+split.skipped+split.missed)*100)||0}%)`}},
+    },
+  });
+
+  // ── 3. Category Chart ──
+  const catData  = computeCatData(days);
+  const catLabels= catData.map(c=>`${c.cat.emoji} ${c.cat.name}`);
+  const catPcts  = catData.map(c=>c.pct);
+  const catBg    = catData.map((_,i)=>getCatColor(i)+'cc');
+  const catBrd   = catData.map((_,i)=>getCatColor(i));
+  const cType    = chartTypes.catChart;
+  const isHCat   = cType==='horizontalBar';
+  const isRadCat = cType==='radar';
+
+  if(isHCat){
+    makeChart('catChart','bar',{
+      labels:catLabels,
+      datasets:[{label:'Avg %',data:catPcts,backgroundColor:catBg,borderColor:catBrd,borderWidth:1,borderRadius:5}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}% avg completion`}}},
+      scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR},min:0,max:100},y:{grid:{display:false},ticks:{color:TICK_COLOR}}},
+    });
+  } else if(isRadCat){
+    makeChart('catChart','radar',{
+      labels:catLabels,
+      datasets:[{label:'Avg %',data:catPcts,backgroundColor:'rgba(167,139,250,0.2)',borderColor:'#a78bfa',borderWidth:2,pointBackgroundColor:'#a78bfa',pointRadius:4}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false}},
+      scales:{r:{grid:{color:GRID_COLOR},angleLines:{color:GRID_COLOR},ticks:{color:TICK_COLOR,backdropColor:'transparent'},min:0,max:100}},
+    });
+  } else {
+    makeChart('catChart','bar',{
+      labels:catLabels,
+      datasets:[{label:'Avg %',data:catPcts,backgroundColor:catBg,borderColor:catBrd,borderWidth:1,borderRadius:6}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}% avg completion`}}},
+      scales:{...axisDefaults('','Avg Completion %'),x:{grid:{display:false},ticks:{color:TICK_COLOR}}},
+    });
+  }
+
+  // ── 4. Monthly Chart ──
+  const monthData  = computeMonthData(days, fh);
+  const mType      = chartTypes.monthChart;
+  makeChart('monthChart', mType==='line'?'line':'bar', {
+    labels: monthData.map(m=>m.label),
+    datasets:[{
+      label:'Monthly Avg %',
+      data: monthData.map(m=>m.pct),
+      backgroundColor: mType==='line'?'transparent':'rgba(232,197,71,0.72)',
+      borderColor:'#e8c547',
+      borderWidth: mType==='line'?2:0,
+      tension:0.4,
+      fill:false,
+      pointBackgroundColor:'#e8c547',
+      pointRadius: mType==='line'?4:0,
+      borderRadius: mType==='bar'?5:0,
+    }]
+  },{
+    responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}% avg`}}},
+    scales: axisDefaults('','Monthly Avg %'),
+  });
+
+  // ── 5. Weekday Chart ──
+  const wdData  = computeWeekdayData(days, fh);
+  const wdType  = chartTypes.weekdayChart;
+  const wdBg    = wdData.map(d=>d.pct>=80?'rgba(78,205,196,0.8)':d.pct>=50?'rgba(167,139,250,0.7)':'rgba(255,107,107,0.65)');
+  if(wdType==='radar'){
+    makeChart('weekdayChart','radar',{
+      labels:wdData.map(d=>d.label),
+      datasets:[{label:'Avg %',data:wdData.map(d=>d.pct),backgroundColor:'rgba(78,205,196,0.15)',borderColor:'#4ecdc4',borderWidth:2,pointBackgroundColor:'#4ecdc4',pointRadius:4}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false}},
+      scales:{r:{grid:{color:GRID_COLOR},angleLines:{color:GRID_COLOR},ticks:{color:TICK_COLOR,backdropColor:'transparent'},min:0,max:100}},
+    });
+  } else if(wdType==='polarArea'){
+    makeChart('weekdayChart','polarArea',{
+      labels:wdData.map(d=>d.label),
+      datasets:[{label:'Avg %',data:wdData.map(d=>d.pct),backgroundColor:['rgba(78,205,196,.7)','rgba(232,197,71,.7)','rgba(167,139,250,.7)','rgba(255,107,107,.7)','rgba(6,214,160,.7)','rgba(255,159,67,.7)','rgba(192,132,252,.7)']}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{position:'bottom'}},
+      scales:{r:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,backdropColor:'transparent'}}},
+    });
+  } else {
+    makeChart('weekdayChart','bar',{
+      labels:wdData.map(d=>d.label),
+      datasets:[{label:'Avg %',data:wdData.map(d=>d.pct),backgroundColor:wdBg,borderRadius:6,borderSkipped:false}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}% on ${c.label}`}}},
+      scales:{...axisDefaults('','Avg %'),x:{grid:{display:false},ticks:{color:TICK_COLOR}}},
+    });
+  }
+
+  // ── 6. Streak Chart ──
+  const streakData = computeStreaks(fh);
+  const stType     = chartTypes.streakChart;
+  const isHSt      = stType==='horizontalBar';
+  makeChart('streakChart', 'bar', {
+    labels: streakData.map(s=>s.name),
+    datasets:[{
+      label:'Current Streak (days)',
+      data: streakData.map(s=>s.streak),
+      backgroundColor: streakData.map((s,i)=>CAT_COLORS[i%CAT_COLORS.length]+'bb'),
+      borderColor:     streakData.map((s,i)=>CAT_COLORS[i%CAT_COLORS.length]),
+      borderWidth:1, borderRadius:5,
+    }]
+  },{
+    responsive:true, maintainAspectRatio:true,
+    indexAxis: isHSt?'y':'x',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} day streak`}}},
+    scales: isHSt
+      ? {x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR},min:0},y:{grid:{display:false},ticks:{color:TICK_COLOR}}}
+      : {x:{grid:{display:false},ticks:{color:TICK_COLOR,maxRotation:40}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR},min:0}},
+  });
+
+  // ── 7. Individual Habits Chart ──
+  const hpData = computeHabitPerf(days, fh);
+  const hType  = chartTypes.habitChart;
+  const isHH   = hType==='horizontalBar';
+  const isRadH = hType==='radar';
+  const hBg    = hpData.map(h=>h.pct>=80?'rgba(78,205,196,0.75)':h.pct>=50?'rgba(232,197,71,0.72)':'rgba(255,107,107,0.65)');
+  if(isRadH){
+    makeChart('habitChart','radar',{
+      labels:hpData.map(h=>h.name),
+      datasets:[{label:'Completion %',data:hpData.map(h=>h.pct),backgroundColor:'rgba(232,197,71,0.12)',borderColor:'#e8c547',borderWidth:2,pointBackgroundColor:'#e8c547',pointRadius:3}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false}},
+      scales:{r:{grid:{color:GRID_COLOR},angleLines:{color:GRID_COLOR},ticks:{color:TICK_COLOR,backdropColor:'transparent'},min:0,max:100}},
+    });
+  } else {
+    makeChart('habitChart','bar',{
+      labels:hpData.map(h=>h.name),
+      datasets:[{label:'Completion %',data:hpData.map(h=>h.pct),backgroundColor:hBg,borderRadius:5,borderSkipped:false}]
+    },{
+      responsive:true,maintainAspectRatio:true,
+      indexAxis: isHH?'y':'x',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}% completion rate`}}},
+      scales: isHH
+        ? {x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR},min:0,max:100},y:{grid:{display:false},ticks:{color:TICK_COLOR}}}
+        : {x:{grid:{display:false},ticks:{color:TICK_COLOR,maxRotation:40}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR},min:0,max:100}},
+    });
+  }
+
+  // ── 8. Heatmap ──
+  renderHeatmap();
+
+  // ── 9. Category Table ──
+  renderCatTable(catData, days);
+}
+
+// ═══════════════════════════════════════════
+//  HEATMAP
+// ═══════════════════════════════════════════
+function renderHeatmap(){
+  const today = new Date();
+  // Go back up to 52 weeks
+  const weeks = 26;
+  const totalDays = weeks*7;
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - totalDays + 1);
+  // Align to Sunday
+  while(startDate.getDay()!==0) startDate.setDate(startDate.getDate()-1);
+
+  const grid = document.getElementById('heatmapGrid');
+  grid.innerHTML='';
+
+  let cur = new Date(startDate);
+  const end = today;
+  let monthLabels=[];
+  let weekIdx=0;
+
+  while(cur<=end){
+    const weekCol=document.createElement('div');
+    weekCol.className='hm-week';
+
+    for(let d=0;d<7;d++){
+      const dayEl=document.createElement('div');
+      dayEl.className='hm-day';
+
+      if(cur>end){
+        dayEl.style.visibility='hidden';
+      } else {
+        const key=dateKey(cur);
+        const doneCount = habits.filter(h=>h.completedDates.includes(key)).length;
+        const skippedAny= habits.some(h=>(h.skippedDates||[]).some(s=>s.date===key));
+        const total=habits.length;
+
+        if(total>0){
+          if(doneCount===0 && skippedAny) dayEl.classList.add('skp');
+          else if(doneCount>0){
+            const ratio=doneCount/total;
+            if(ratio>=1)        dayEl.classList.add('l4');
+            else if(ratio>=0.7) dayEl.classList.add('l3');
+            else if(ratio>=0.4) dayEl.classList.add('l2');
+            else                dayEl.classList.add('l1');
+          }
+        }
+
+        const dayLabel=cur.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        dayEl.title=`${dayLabel}: ${doneCount}/${total} done${skippedAny?', some skipped':''}`;
+
+        // track month labels
+        if(d===0 || (d===0 && weekIdx===0)){
+          if(!monthLabels.length || monthLabels[monthLabels.length-1].month !== cur.getMonth()){
+            monthLabels.push({month:cur.getMonth(), label:cur.toLocaleDateString('en-US',{month:'short'}), weekIdx});
+          }
+        }
+      }
+      weekCol.appendChild(dayEl);
+      const n=new Date(cur); n.setDate(n.getDate()+1); cur=n;
+    }
+    grid.appendChild(weekCol);
+    weekIdx++;
+  }
+
+  // Month labels
+  const mLabelEl=document.getElementById('hmMonthLabels');
+  mLabelEl.innerHTML='';
+  // simple approach — evenly spaced labels
+  const totalWeeks=grid.children.length;
+  monthLabels.forEach((ml,i)=>{
+    const span=document.createElement('span');
+    span.className='hm-month-label';
+    span.textContent=ml.label;
+    const widthPct=((i+1<monthLabels.length?monthLabels[i+1].weekIdx:totalWeeks)-ml.weekIdx)/totalWeeks*100;
+    span.style.width=widthPct+'%';
+    span.style.minWidth='20px';
+    mLabelEl.appendChild(span);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  CATEGORY TABLE
+// ═══════════════════════════════════════════
+function renderCatTable(catData, days){
+  const max = Math.max(...catData.map(c=>c.pct),1);
+  const tbody=document.getElementById('catTableBody');
+  if(!catData.length){ tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">No category data</td></tr>`; return; }
+  tbody.innerHTML=catData.map((c,i)=>{
+    const color=getCatColor(i);
+    const pctColor=c.pct>=80?'var(--accent3)':c.pct>=50?'var(--accent)':'var(--accent2)';
+    return `<tr>
+      <td><strong>${c.cat.emoji} ${c.cat.name}</strong></td>
+      <td>${c.habitCount}</td>
+      <td>${c.done}</td>
+      <td>${c.skipped}</td>
+      <td><span class="pct-badge" style="color:${pctColor}">${c.pct}%</span></td>
+      <td>
+        <div class="mini-bar"><div class="mini-bar-fill" style="width:${c.pct}%;background:${color};"></div></div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  INIT CONTROLS
+// ═══════════════════════════════════════════
+function initControls(){
+  // Range chips
+  document.getElementById('rangeChips').querySelectorAll('.chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#rangeChips .chip').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentRange=btn.dataset.range;
+      renderAllCharts();
+    });
+  });
+
+  // Category filter
+  const sel=document.getElementById('catFilter');
+  cats.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=`${c.emoji} ${c.name}`; sel.appendChild(o); });
+  sel.addEventListener('change',()=>{ currentCat=sel.value; renderAllCharts(); });
+}
+
+// ═══════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════
+if(!habits.length){
+  document.getElementById('noDataState').style.display='block';
+  document.getElementById('analyticsContent').style.display='none';
+} else {
+  initControls();
+  renderAllCharts();
+}
+</script>
+</body>
+</html>
